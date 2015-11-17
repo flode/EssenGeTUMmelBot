@@ -3,7 +3,46 @@
 #include <tgbot/tgbot.h>
 #include <unordered_map>
 
+
 using namespace TgBot;
+
+enum class Coming : uint8_t {
+    yes,
+    no,
+    maybe
+};
+
+struct Vote {
+    std::string firstName;
+    Coming coming;
+
+    Vote(const std::string &firstName, const Coming &coming) : firstName(firstName), coming(coming) { }
+};
+
+std::unordered_multimap<uint64_t, Vote> load() {
+    std::unordered_multimap<uint64_t, Vote> multimap;
+    std::ifstream ifstream("save.sav", std::ios_base::in);
+    while (ifstream.good()) {
+        std::pair<uint64_t, Vote> item{0,{"",Coming::no}};
+        ifstream.read(reinterpret_cast<char*>(&item.first), sizeof(item.first));
+        std::getline(ifstream, item.second.firstName, '\0');
+        ifstream.read(reinterpret_cast<char*>(&item.second.coming), sizeof(item.second.coming));
+        multimap.emplace(item);
+        ifstream.peek();
+    }
+    return multimap;
+}
+
+void save(std::unordered_multimap<uint64_t, Vote> &multimap) {
+    std::ofstream of("save.sav", std::ios_base::out);
+    for (auto &item : multimap) {
+        of.write(reinterpret_cast<const char*>(&item.first), sizeof(item.first));
+        of.write(item.second.firstName.c_str(), item.second.firstName.length());
+        of.write("\0", 1);
+        of.write(reinterpret_cast<const char*>(&item.second.coming), sizeof(item.second.coming));
+    }
+    std::cerr << "Finished saving!" << std::endl;
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -14,19 +53,8 @@ int main(int argc, char *argv[]) {
     bot.getEvents().onCommand("start", [&bot](Message::Ptr message) {
         bot.getApi().sendMessage(message->chat->id, "Hi!");
     });
-    enum class Coming {
-        yes,
-        no,
-        maybe
-    };
-    struct Vote {
-        std::string firstName;
-        Coming coming;
+    std::unordered_multimap<uint64_t, Vote> votes = load();
 
-
-        Vote(const std::string &firstName, const Coming &coming) : firstName(firstName), coming(coming) { }
-    };
-    std::unordered_multimap<int, Vote> votes;
 
     bot.getEvents().onCommand("help", [&bot](Message::Ptr message) {
         bot.getApi().sendMessage(message->chat->id,
@@ -83,6 +111,7 @@ int main(int argc, char *argv[]) {
                           std::forward_as_tuple(0),
                           std::forward_as_tuple(tokens[1], Coming::no));
         }
+        save(votes);
     });
     bot.getEvents().onNonCommandMessage([&votes] (Message::Ptr message) {
         votes.erase(message->from->id);
@@ -95,6 +124,7 @@ int main(int argc, char *argv[]) {
                           std::forward_as_tuple(message->from->id),
                           std::forward_as_tuple(message->from->firstName, Coming::no));
         }
+        save(votes);
     });
 
     try {
