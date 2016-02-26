@@ -114,12 +114,13 @@ int main(int argc, char *argv[]) {
         save(votes);
     });
     bot.getEvents().onNonCommandMessage([&votes] (Message::Ptr message) {
-        votes.erase(message->from->id);
         if (message->text == "yes") {
+            votes.erase(message->from->id);
             votes.emplace(std::piecewise_construct,
                           std::forward_as_tuple(message->from->id),
                           std::forward_as_tuple(message->from->firstName, Coming::yes));
         } else if (message->text == "no") {
+            votes.erase(message->from->id);
             votes.emplace(std::piecewise_construct,
                           std::forward_as_tuple(message->from->id),
                           std::forward_as_tuple(message->from->firstName, Coming::no));
