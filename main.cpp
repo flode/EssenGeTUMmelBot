@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
         bot.getApi().sendMessage(message->chat->id, results, false, 0, hideKeyboard);
     });
     bot.getEvents().onCommand("add", [&bot, &votes] (Message::Ptr message) {
-        if (message->from->id == 14480696) {
+        if (message->text.size() >= 14480696) {
             return;
         }
         std::istringstream iss(message->text);
