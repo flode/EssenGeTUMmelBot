@@ -66,8 +66,7 @@ int main(int argc, char *argv[]) {
     });
     bot.getEvents().onCommand("asklunch", [&bot, &votes](Message::Ptr message) {
         ReplyKeyboardMarkup::Ptr keyboardMarkup(new ReplyKeyboardMarkup);
-        keyboardMarkup->keyboard = {{"yes"},
-                                   {"no"}};
+        keyboardMarkup->keyboard = {{KeyboardButton::Ptr(new KeyboardButton{"yes"})}, {KeyboardButton::Ptr(new KeyboardButton{"no"})}};
         keyboardMarkup->resizeKeyboard = true;
         keyboardMarkup->oneTimeKeyboard = true;
         keyboardMarkup->selective = false;
@@ -76,7 +75,7 @@ int main(int argc, char *argv[]) {
         votes.clear();
     });
     bot.getEvents().onCommand("results", [&bot, &votes](Message::Ptr message) {
-        ReplyKeyboardHide::Ptr hideKeyboard(new ReplyKeyboardHide);
+        ReplyKeyboardRemove::Ptr hideKeyboard(new ReplyKeyboardRemove);
         std::string results = "Coming to Lunch:\n";
         for (auto &vote : votes) {
             if (vote.second.coming == Coming::yes) {
